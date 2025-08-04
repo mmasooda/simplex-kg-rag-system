@@ -1,0 +1,238 @@
+answer_generation:
+  system_prompt: |
+    You are a senior fire alarm systems engineer with 20+ years of experience in Simplex products.
+    Generate comprehensive, technically accurate responses with specific part numbers.
+    
+  boq_generation_prompt: |
+    Generate a complete Bill of Quantities for this fire alarm system:
+    
+    **User Requirements**: {user_query}
+    
+    **Knowledge Graph Data**: {kg_context}
+    
+    **System Design Principles**:
+    1. Every detector MUST have a mounting base
+    2. Panels require internal modules for operation
+    3. Voice systems need voice interface modules
+    4. Calculate circuit loading and power requirements
+    5. Include all required accessories and components
+    
+    **BOQ Structure Required**:
+    
+    ### A. CONTROL PANEL SECTION
+    - Main control panel with internal modules
+    - Required internal processor, display, power boards
+    - Optional modules (voice, network, printer interface)
+    
+    ### B. DETECTION DEVICES SECTION  
+    - Smoke detectors with required bases
+    - Heat detectors with required bases
+    - Manual pull stations
+    - Include exact part numbers for bases
+    
+    ### C. NOTIFICATION DEVICES SECTION
+    - Horn strobes with candela ratings
+    - Speakers with wattage taps
+    - Voice notification devices
+    - Calculate circuit requirements
+    
+    ### D. SYSTEM MODULES SECTION
+    - Interface modules for conventional devices
+    - I/O modules for auxiliary functions
+    - Network interface modules
+    
+    ### E. ACCESSORIES & MISCELLANEOUS
+    - End-of-line resistors
+    - Mounting hardware
+    - Labels and documentation
+    
+    **Critical Requirements**:
+    - Every detector quantity MUST equal base quantity
+    - Include internal panel modules (processor, display, power)
+    - Specify exact Simplex part numbers
+    - Calculate circuit loading
+    - Provide technical justifications
+    
+    Generate response as:
+    ```json
+    {{
+      "technical_analysis": {{
+        "system_overview": "comprehensive_system_description",
+        "capacity_analysis": "device_count_and_panel_selection",
+        "circuit_design": "NAC_and_speaker_circuit_calculations",
+        "power_requirements": "total_system_power_analysis"
+      }},
+      "bill_of_quantities": [
+        {{
+          "section": "A. CONTROL PANEL",
+          "items": [
+            {{
+              "item": "exact_product_name",
+              "sku": "exact_simplex_part_number",
+              "quantity": number,
+              "description": "detailed_technical_description",
+              "unit_price_notes": "pricing_guidance",
+              "installation_notes": "technical_installation_requirements"
+            }}
+          ]
+        }}
+      ],
+      "technical_specifications": {{
+        "total_addressable_points": number,
+        "power_consumption": "calculated_power_requirements", 
+        "circuit_summary": "NAC_and_speaker_circuit_breakdown",
+        "compliance": "relevant_codes_and_standards"
+      }},
+      "critical_relationships": [
+        {{
+          "relationship": "detector_to_base_mapping",
+          "details": "exact_detector_and_base_part_numbers"
+        }}
+      ]
+    }}
+    ```
+
+quality_comparison:
+  system_prompt: |
+    You are a fire alarm system quality assessor. Compare technical accuracy and completeness.
+    
+  comparison_prompt: |
+    Compare these two fire alarm system responses:
+    
+    **User Query**: {user_query}
+    
+    **Response A (Baseline RAG)**:
+    {baseline_response}
+    
+    **Response B (Knowledge Graph Enhanced)**:
+    {kg_enhanced_response}
+    
+    **Evaluation Criteria**:
+    
+    1. **Technical Accuracy** (40 points):
+       - Correct Simplex part numbers
+       - Proper detector-base relationships
+       - Accurate internal module specifications
+       - Circuit calculations and power requirements
+    
+    2. **Completeness** (30 points):
+       - Detection devices with bases
+       - Control panel with internal modules
+       - Notification devices with circuits
+       - Interface modules and accessories
+    
+    3. **Professional Standards** (20 points):
+       - Code compliance references
+       - Installation requirements
+       - Technical justifications
+       - Industry best practices
+    
+    4. **Practical Implementation** (10 points):
+       - Real-world feasibility
+       - Cost considerations
+       - Maintenance requirements
+       - System scalability
+    
+    **Critical Errors to Identify**:
+    - Missing detector bases (major error)
+    - Missing panel internal modules (major error)
+    - Incorrect part numbers (major error)
+    - Inadequate circuit calculations (moderate error)
+    
+    Return comparison:
+    ```json
+    {{
+      "evaluation": {{
+        "response_a_score": {{
+          "technical_accuracy": score_out_of_40,
+          "completeness": score_out_of_30,
+          "professional_standards": score_out_of_20,
+          "practical_implementation": score_out_of_10,
+          "total": total_score_out_of_100
+        }},
+        "response_b_score": {{
+          "technical_accuracy": score_out_of_40,
+          "completeness": score_out_of_30,
+          "professional_standards": score_out_of_20,
+          "practical_implementation": score_out_of_10,
+          "total": total_score_out_of_100
+        }}
+      }},
+      "critical_differences": [
+        {{
+          "category": "difference_type",
+          "baseline_issue": "what_baseline_missed_or_got_wrong",
+          "kg_enhancement": "how_kg_version_is_better",
+          "impact": "high|medium|low"
+        }}
+      ],
+      "recommendation": {{
+        "better_response": "A|B",
+        "improvement_score": difference_in_points,
+        "key_advantages": ["list_of_main_improvements"],
+        "justification": "detailed_reasoning_for_selection"
+      }}
+    }}
+    ```
+
+iterative_refinement:
+  system_prompt: |
+    You are a fire alarm system design reviewer conducting iterative quality improvements.
+    
+  refinement_prompt: |
+    **Current Iteration**: {iteration_number}
+    **User Query**: {user_query}
+    **Previous Response**: {previous_response}
+    **New Knowledge Graph Data**: {new_kg_data}
+    
+    **Refinement Focus Areas**:
+    
+    ### Iteration 1: Foundation
+    - Verify basic panel selection and capacity
+    - Ensure detector-base relationships
+    - Check internal module requirements
+    
+    ### Iteration 2: Enhancement
+    - Refine circuit calculations
+    - Add missing accessories
+    - Improve technical specifications
+    
+    ### Iteration 3: Optimization
+    - Validate compliance requirements
+    - Optimize cost and performance
+    - Add installation guidance
+    
+    **Specific Improvements Needed**:
+    1. **Part Number Accuracy**: Verify all Simplex SKUs
+    2. **Relationship Completeness**: Every detector needs base
+    3. **Technical Calculations**: Power, circuits, capacity
+    4. **Professional Details**: Installation, codes, standards
+    
+    **Integration Rules**:
+    - Always include new valuable information
+    - Correct any identified errors
+    - Maintain consistency with Simplex standards
+    - Enhance technical depth without losing clarity
+    
+    Generate refined response:
+    ```json
+    {{
+      "refinement_analysis": {{
+        "improvements_made": ["list_of_specific_improvements"],
+        "errors_corrected": ["list_of_corrections"],
+        "new_information_added": ["list_of_enhancements"],
+        "confidence_level": "high|medium|low"
+      }},
+      "refined_response": {{
+        "enhanced_answer": "improved_comprehensive_response",
+        "updated_boq": "refined_bill_of_quantities",
+        "technical_validation": "verified_calculations_and_specifications"  
+      }},
+      "quality_metrics": {{
+        "completeness_score": score_out_of_100,
+        "accuracy_score": score_out_of_100,
+        "professional_score": score_out_of_100,
+        "overall_improvement": "percentage_improvement_from_previous"
+      }}
+    }}
+    ```

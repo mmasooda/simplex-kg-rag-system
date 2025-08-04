@@ -1,0 +1,176 @@
+entity_extraction:
+  system_prompt: |
+    You are an expert fire alarm systems engineer specializing in Simplex products.
+    Extract entities from user queries with precise technical knowledge.
+    
+  entity_types:
+    - Panel: Fire alarm control panels (4100ES, 4010ES, 4007ES)
+    - InternalModule: Panel internal modules and circuit boards
+    - Base: Detector mounting bases (4098-9792, 4098-9793, etc.)
+    - Device: Detection and notification devices
+    - Module: Interface and I/O modules
+    - Specification: Technical requirements and parameters
+    
+  extraction_prompt: |
+    Analyze this fire alarm system query and extract specific Simplex entities:
+    
+    Query: "{query}"
+    
+    Focus on:
+    1. **Control Panels**: Look for capacity requirements (number of points, devices)
+    2. **Internal Modules**: Identify required internal components (processor boards, interface boards)
+    3. **Detectors**: Count and type (smoke, heat, manual stations)
+    4. **Detector Bases**: Required for all detector installations
+    5. **Notification Devices**: Speakers, strobes, horn-strobes
+    6. **Voice Systems**: Speaker circuits and voice capability requirements
+    7. **NAC Circuits**: Notification appliance circuits
+    8. **Interface Modules**: For conventional device integration
+    9. **Technical Specifications**: Voltage, current, environmental ratings
+    
+    Return entities in this JSON format:
+    ```json
+    {{
+      "panels": [
+        {{
+          "entity": "panel_requirement",
+          "capacity_needed": "number_of_addressable_points",
+          "voice_required": true/false,
+          "suggested_sku": "recommended_panel_sku"
+        }}
+      ],
+      "devices": [
+        {{
+          "entity": "device_type",
+          "quantity": number,
+          "category": "smoke_detector|heat_detector|manual_station|notification_device",
+          "specifications": "technical_requirements"
+        }}
+      ],
+      "bases": [
+        {{
+          "entity": "detector_base",
+          "quantity": number,
+          "base_type": "standard|relay|high_temp|weatherproof",
+          "required_for": "detector_sku"
+        }}
+      ],
+      "circuits": [
+        {{
+          "entity": "circuit_requirement", 
+          "type": "NAC|Speaker|IDNet",
+          "quantity": number,
+          "specifications": "circuit_details"
+        }}
+      ]
+    }}
+    ```
+
+path_identification:
+  system_prompt: |
+    You are a fire alarm system designer with deep knowledge of Simplex product relationships.
+    Identify connection paths and dependencies between components.
+    
+  path_prompt: |
+    Based on these extracted entities: {entities}
+    
+    Identify critical relationships and paths:
+    
+    1. **Panel Selection Path**:
+       - Calculate total addressable points needed
+       - Determine voice capability requirements
+       - Select appropriate panel (4100ES/4010ES/4007ES)
+       
+    2. **Detector Installation Path**:
+       - Every detector REQUIRES a mounting base
+       - Match detector types to appropriate bases
+       - Consider environmental requirements
+       
+    3. **Internal Module Path**:
+       - Identify required internal modules for selected panel
+       - Include processor, display, power supply boards
+       - Add voice interface if voice capability needed
+       
+    4. **Circuit Design Path**:
+       - Calculate IDNet addressable circuits
+       - Design NAC circuits for notification devices
+       - Plan speaker circuits for voice systems
+       
+    Return relationship paths:
+    ```json
+    {{
+      "critical_paths": [
+        {{
+          "path_type": "detector_base_dependency",
+          "source": "detector_sku",
+          "target": "required_base_sku", 
+          "relationship": "REQUIRES_BASE",
+          "mandatory": true
+        }}
+      ],
+      "design_paths": [
+        {{
+          "path_type": "panel_capacity",
+          "calculation": "total_devices_needed",
+          "recommendation": "suggested_panel",
+          "justification": "capacity_analysis"
+        }}
+      ]
+    }}
+    ```
+
+cypher_generation:
+  system_prompt: |
+    You are a Neo4j Cypher expert with deep knowledge of Simplex fire alarm systems.
+    Generate precise Cypher queries to find compatible products and relationships.
+    
+  cypher_prompt: |
+    Generate Cypher queries for these entities and paths: {entities_and_paths}
+    
+    Use this knowledge graph schema:
+    - Nodes: Panel, Device, Base, Module, InternalModule
+    - Relationships: COMPATIBLE_WITH, REQUIRES_BASE, HAS_INTERNAL_MODULE
+    
+    Generate queries for:
+    
+    1. **Panel Compatibility Query**:
+    ```cypher
+    MATCH (p:Panel)-[:COMPATIBLE_WITH]->(d:Device)
+    WHERE p.capacity >= {required_capacity}
+    RETURN p, d
+    ```
+    
+    2. **Detector-Base Requirements**:
+    ```cypher
+    MATCH (d:Device)-[:REQUIRES_BASE]->(b:Base)
+    WHERE d.category = '{detector_type}'
+    RETURN d, b
+    ```
+    
+    3. **Internal Module Requirements**:
+    ```cypher
+    MATCH (p:Panel)-[:HAS_INTERNAL_MODULE]->(im:InternalModule)
+    WHERE p.sku = '{panel_sku}' AND im.required = true
+    RETURN p, im
+    ```
+    
+    4. **Complete System Query**:
+    ```cypher
+    MATCH (p:Panel {{sku: '{selected_panel}'}})-[:COMPATIBLE_WITH]->(d:Device),
+          (d)-[:REQUIRES_BASE]->(b:Base),
+          (p)-[:HAS_INTERNAL_MODULE]->(im:InternalModule)
+    WHERE im.required = true
+    RETURN p, d, b, im
+    ```
+    
+    Return structured queries:
+    ```json
+    {{
+      "queries": [
+        {{
+          "purpose": "query_description",
+          "cypher": "MATCH ... RETURN ...",
+          "parameters": {{"param": "value"}}
+        }}
+      ]
+    }}
+    ```

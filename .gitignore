@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Neo4j
+neo4j_data/
+neo4j_logs/
+
+# Data directories
+data/raw/
+data/processed/
+data/csv_export/
+
+# Logs
+logs/
+*.log
+
+# AWS
+.aws/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
