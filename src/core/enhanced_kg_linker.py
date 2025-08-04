@@ -404,6 +404,12 @@ class EnhancedKGLinker:
         # Query 1: Find compatible panel for capacity
         for panel in entities.panels:
             capacity_needed = panel.get('capacity_needed', 0)
+            # Convert to integer if it's a string
+            if isinstance(capacity_needed, str):
+                try:
+                    capacity_needed = int(capacity_needed)
+                except (ValueError, TypeError):
+                    capacity_needed = 0
             if capacity_needed > 0:
                 queries.append({
                     'purpose': 'find_compatible_panel',

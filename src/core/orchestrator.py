@@ -103,7 +103,7 @@ class BYOKGRAGPipeline:
             # Store iteration metadata with quality metrics
             iteration_metadata.append({
                 "iteration": iteration + 1,
-                "kg_linker_entities": len(kg_output.entities),
+                "kg_linker_entities": len(kg_output.entities.panels) + len(kg_output.entities.devices) + len(kg_output.entities.bases) + len(kg_output.entities.circuits) + len(kg_output.entities.specifications),
                 "kg_linker_paths": len(kg_output.paths),
                 "retrieval_methods": len(retrieval_results),
                 "new_facts_found": len(new_context),

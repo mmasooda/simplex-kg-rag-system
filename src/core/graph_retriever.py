@@ -66,13 +66,13 @@ class GraphRetriever:
                 ))
         
         # 3. Cypher Retrieval
-        if kg_linker_output.cypher_query:
-            cypher_results = self._execute_cypher(kg_linker_output.cypher_query)
+        if kg_linker_output.cypher_queries:
+            cypher_results = self._execute_cypher_queries(kg_linker_output.cypher_queries)
             if cypher_results:
                 results.append(RetrievalResult(
                     method="cypher_retrieval",
                     data=cypher_results,
-                    metadata={"query": kg_linker_output.cypher_query}
+                    metadata={"queries": kg_linker_output.cypher_queries}
                 ))
         
         # 4. Triplet Retrieval (safety net)
@@ -131,9 +131,29 @@ class GraphRetriever:
         
         return query
     
-    def _execute_cypher(self, cypher_query: str) -> List[Dict[str, Any]]:
+    def _execute_cypher_queries(self, cypher_queries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Execute multiple Cypher queries safely"""
+        all_results = []
+        
+        for query_data in cypher_queries:
+            if isinstance(query_data, dict) and 'cypher' in query_data:
+                parameters = query_data.get('parameters', {})
+                query_results = self._execute_cypher_with_params(query_data['cypher'], parameters)
+                all_results.extend(query_results)
+        
+        return all_results
+    
+    def _execute_cypher_with_params(self, cypher_query: str, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        """Execute a Cypher query with parameters safely"""
+        if parameters is None:
+            parameters = {}
+        return self._execute_cypher(cypher_query, parameters)
+    
+    def _execute_cypher(self, cypher_query: str, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
         """Execute a Cypher query safely"""
         results = []
+        if parameters is None:
+            parameters = {}
         
         # Basic query validation
         forbidden_keywords = ['DELETE', 'REMOVE', 'SET', 'CREATE', 'MERGE', 'DETACH']
@@ -150,7 +170,7 @@ class GraphRetriever:
                 if 'LIMIT' not in query_upper:
                     cypher_query += ' LIMIT 100'
                 
-                result = session.run(cypher_query)
+                result = session.run(cypher_query, parameters)
                 
                 for record in result:
                     # Convert Neo4j objects to plain dictionaries
@@ -209,20 +229,41 @@ class EntityLinker:
         self.driver = neo4j_driver
         self.logger = logging.getLogger(self.__class__.__name__)
     
-    def link_entities(self, entities: List[Dict[str, str]]) -> List[Dict[str, Any]]:
+    def link_entities(self, entities) -> List[Dict[str, Any]]:
         """
         Link entity mentions to actual nodes in the graph
         
         Args:
-            entities: List of entity mentions from KG-Linker
+            entities: EntityExtractionResult object or list of entities from KG-Linker
             
         Returns:
             List of linked entities with their graph data
         """
         linked = []
         
+        # Handle EntityExtractionResult object
+        if hasattr(entities, 'panels'):
+            all_entities = []
+            # Combine all entity types into a single list
+            for panel in entities.panels:
+                panel['entity_type'] = 'panel'
+                all_entities.append(panel)
+            for device in entities.devices:
+                device['entity_type'] = 'device'
+                all_entities.append(device)
+            for base in entities.bases:
+                base['entity_type'] = 'base'
+                all_entities.append(base)
+            for circuit in entities.circuits:
+                circuit['entity_type'] = 'circuit'
+                all_entities.append(circuit)
+            entities_to_process = all_entities
+        else:
+            # Handle as list of entities
+            entities_to_process = entities
+        
         with self.driver.session() as session:
-            for entity in entities:
+            for entity in entities_to_process:
                 entity_type = entity.get('type', '')
                 identifier = entity.get('identifier', '')
                 
@@ -250,7 +291,7 @@ class EntityLinker:
                         "score": fuzzy_matches[0]['score']
                     })
         
-        self.logger.info(f"Linked {len(linked)} out of {len(entities)} entities")
+        self.logger.info(f"Linked {len(linked)} out of {len(entities_to_process)} entities")
         return linked
     
     def _exact_match(self, session, entity_type: str, identifier: str) -> Optional[Dict[str, Any]]:
