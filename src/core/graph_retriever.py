@@ -95,7 +95,7 @@ class GraphRetriever:
         start_nodes = {e['data']['sku'] if 'sku' in e['data'] else e['data'].get('name', ''): e for e in linked_entities}
         
         with self.driver.session() as session:
-            for path in paths[:5]:  # Limit to avoid too many queries
+            for path in paths[:15]:  # Increased limit for better retrieval coverage
                 if len(path) < 2:
                     continue
                 
@@ -192,7 +192,7 @@ class GraphRetriever:
         triplets = []
         
         with self.driver.session() as session:
-            for entity in linked_entities[:10]:  # Limit to avoid too many queries
+            for entity in linked_entities[:25]:  # Increased limit for better triplet coverage
                 entity_id = entity['data'].get('sku') or entity['data'].get('license_sku') or entity['data'].get('name')
                 
                 if not entity_id:
@@ -203,7 +203,7 @@ class GraphRetriever:
                 MATCH (n)-[r]-(m)
                 WHERE (n.sku = $id OR n.license_sku = $id OR n.name = $id)
                 RETURN n, type(r) as rel_type, r, m
-                LIMIT 20
+                LIMIT 50
                 """
                 
                 result = session.run(query, id=entity_id)
@@ -295,33 +295,45 @@ class EntityLinker:
         return linked
     
     def _exact_match(self, session, entity_type: str, identifier: str) -> Optional[Dict[str, Any]]:
-        """Try exact matching on common properties"""
+        """Try exact matching prioritizing SKU over name"""
         
-        # Build query based on entity type
-        if entity_type in ['Product', 'Panel']:
+        # Build query prioritizing SKU matching for all entity types
+        if entity_type == 'License':
+            # First try license_sku, then fallback to name
             query = f"""
             MATCH (n:{entity_type})
-            WHERE n.sku = $identifier OR n.name = $identifier
-            RETURN n LIMIT 1
-            """
-        elif entity_type == 'License':
-            query = f"""
+            WHERE n.license_sku = $identifier 
+            RETURN n, 'license_sku' as match_field
+            UNION
             MATCH (n:{entity_type})
-            WHERE n.license_sku = $identifier OR n.name = $identifier
-            RETURN n LIMIT 1
+            WHERE n.name = $identifier AND NOT EXISTS({{
+                MATCH (m:{entity_type}) WHERE m.license_sku = $identifier
+            }})
+            RETURN n, 'name' as match_field
+            LIMIT 1
             """
         else:
+            # First try SKU, then fallback to name for all other entity types
             query = f"""
             MATCH (n:{entity_type})
-            WHERE n.name = $identifier
-            RETURN n LIMIT 1
+            WHERE n.sku = $identifier 
+            RETURN n, 'sku' as match_field
+            UNION
+            MATCH (n:{entity_type})
+            WHERE n.name = $identifier AND NOT EXISTS({{
+                MATCH (m:{entity_type}) WHERE m.sku = $identifier
+            }})
+            RETURN n, 'name' as match_field
+            LIMIT 1
             """
         
         result = session.run(query, identifier=identifier)
         record = result.single()
         
         if record:
-            return dict(record['n'])
+            node_data = dict(record['n'])
+            node_data['_match_field'] = record['match_field']  # Track which field matched
+            return node_data
         return None
     
     def _fuzzy_match(self, session, entity_type: str, identifier: str) -> List[Dict[str, Any]]:
@@ -358,7 +370,7 @@ class EntityLinker:
                     common_chars = len(set(identifier_lower) & set(prop_value))
                     score = max(score, common_chars / max(len(identifier_lower), len(prop_value)))
             
-            if score > 0.5:  # Threshold
+            if score > 0.7:  # Raised threshold to reduce false matches
                 matches.append({
                     "node": node,
                     "score": score

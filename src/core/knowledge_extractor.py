@@ -103,7 +103,7 @@ Focus on actual Simplex products with real SKUs. Ignore generic references.
 
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are a fire alarm systems expert. Extract only factual product information in valid JSON format."},
                     {"role": "user", "content": prompt}
@@ -160,7 +160,7 @@ Return ONLY a JSON array of specifications:
 
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are a technical documentation expert. Extract precise specifications in valid JSON format."},
                     {"role": "user", "content": prompt}
@@ -222,7 +222,7 @@ Only include relationships explicitly mentioned or strongly implied in the docum
 
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are a systems integration expert. Extract only documented relationships in valid JSON format."},
                     {"role": "user", "content": prompt}
@@ -243,6 +243,8 @@ Only include relationships explicitly mentioned or strongly implied in the docum
                     rel.get('source_sku') in entity_skus and 
                     rel.get('target_sku') in entity_skus):
                     rel['source'] = source_file
+                    # Add weight property: 1.0 for explicit relationships, 0.8 for implied
+                    rel['weight'] = 1.0 if 'explicitly' in rel.get('description', '').lower() else 0.8
                     validated_relationships.append(rel)
             
             return validated_relationships

@@ -171,7 +171,7 @@ class BYOKGRAGPipeline:
         """Get simple RAG baseline answer for comparison"""
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are a fire alarm system expert. Provide a direct, practical answer."},
                     {"role": "user", "content": f"Fire alarm question: {user_query}"}
@@ -274,26 +274,44 @@ class BYOKGRAGPipeline:
         return any(field in str(item).lower() for field in valuable_fields)
     
     def _calculate_confidence(self, method: str, data: List[Dict[str, Any]]) -> float:
-        """Calculate confidence score for retrieved data"""
+        """Calculate confidence score for retrieved data with tuned weights"""
         base_confidence = {
-            'entity_linking': 0.9,
-            'cypher_retrieval': 0.8,
-            'triplet_retrieval': 0.7,
-            'path_retrieval': 0.6
+            'entity_linking': 0.95,      # Highest - direct entity matches
+            'cypher_retrieval': 0.85,    # High - structured query results  
+            'triplet_retrieval': 0.75,   # Good - relationship-based
+            'path_retrieval': 0.65       # Lower - path-based inference
         }
         
         # Adjust based on data quality
         confidence = base_confidence.get(method, 0.5)
         
-        # Boost confidence if we have specific product SKUs
-        has_skus = any('sku' in str(item) for item in data)
+        # Significant boost for exact SKU matches
+        has_skus = any('sku' in str(item) and item.get('sku') for item in data if isinstance(item, dict))
         if has_skus:
-            confidence += 0.1
+            confidence += 0.15
         
-        # Boost confidence if we have detailed descriptions
-        has_descriptions = any('description' in str(item) and len(str(item.get('description', ''))) > 50 for item in data)
+        # Moderate boost for detailed technical descriptions
+        has_descriptions = any(
+            isinstance(item, dict) and 
+            'description' in item and 
+            len(str(item.get('description', ''))) > 50 
+            for item in data
+        )
         if has_descriptions:
-            confidence += 0.1
+            confidence += 0.08
+        
+        # Boost for weight property in relationships (indicating explicit vs inferred)
+        has_explicit_weights = any(
+            isinstance(item, dict) and 
+            item.get('weight', 0) >= 1.0 
+            for item in data
+        )
+        if has_explicit_weights:
+            confidence += 0.12
+        
+        # Penalty for sparse data
+        if len(data) < 3:
+            confidence -= 0.05
         
         return min(confidence, 1.0)
     
@@ -374,7 +392,7 @@ Response:"""
 
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are a senior fire alarm systems engineer. Use the knowledge graph data to provide accurate, detailed technical responses."},
                     {"role": "user", "content": prompt}
@@ -440,7 +458,7 @@ Response format:
 
         try:
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are an expert technical evaluator. Be objective and detailed."},
                     {"role": "user", "content": comparison_prompt}

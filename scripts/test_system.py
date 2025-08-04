@@ -48,7 +48,7 @@ def test_openai():
         
         # Simple test
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[{"role": "user", "content": "Say 'OpenAI Connected!'"}],
             max_tokens=20
         )

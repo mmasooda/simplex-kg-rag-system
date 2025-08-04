@@ -47,7 +47,7 @@ class KGLinker:
         
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": self._get_system_prompt()},
                     {"role": "user", "content": prompt}
@@ -200,31 +200,71 @@ class GraphSchemaLoader:
     
     @staticmethod
     def get_default_schema() -> Dict[str, Any]:
-        """Get the default Simplex graph schema"""
+        """Get the default Simplex graph schema with expanded fire alarm domain entities"""
         return {
             "nodes": {
                 "Product": ["sku", "name", "description", "type", "manufacturer"],
                 "License": ["license_sku", "name", "description", "duration"],
                 "Panel": ["sku", "name", "device_capacity", "loop_capacity"],
                 "Module": ["sku", "name", "type", "channels"],
-                "Feature": ["name", "description", "category"]
+                "Feature": ["name", "description", "category"],
+                "Detector": ["sku", "name", "type", "sensitivity", "operating_voltage"],
+                "Base": ["sku", "name", "type", "compatibility", "sounder_capability"],
+                "Annunciator": ["sku", "name", "type", "display_type", "zones"],
+                "PowerSupply": ["sku", "name", "voltage", "current_rating", "backup_capability"],
+                "Battery": ["sku", "name", "voltage", "amp_hours", "type"],
+                "Circuit": ["name", "type", "max_devices", "wire_requirements"],
+                "Accessory": ["sku", "name", "type", "compatibility"],
+                "Specification": ["name", "type", "value", "unit", "standard"]
             },
             "relationships": {
                 "COMPATIBLE_WITH": {
                     "description": "Indicates two products can work together",
-                    "properties": ["notes", "verified_date"]
+                    "properties": ["notes", "verified_date", "weight"]
                 },
                 "REQUIRES_LICENSE": {
                     "description": "Product requires a specific license",
-                    "properties": ["quantity", "mandatory"]
+                    "properties": ["quantity", "mandatory", "weight"]
                 },
                 "PART_OF": {
                     "description": "Component is part of a larger system",
-                    "properties": ["role", "quantity"]
+                    "properties": ["role", "quantity", "weight"]
                 },
                 "SUPPORTS": {
                     "description": "Product supports a specific feature",
-                    "properties": ["version", "limitations"]
+                    "properties": ["version", "limitations", "weight"]
+                },
+                "HAS_BASE": {
+                    "description": "Detector requires or uses a specific base",
+                    "properties": ["required", "notes", "weight"]
+                },
+                "HAS_MODULE": {
+                    "description": "Panel or system includes a specific module",
+                    "properties": ["slot", "quantity", "weight"]
+                },
+                "ALTERNATIVE_TO": {
+                    "description": "Product can be used as an alternative to another",
+                    "properties": ["notes", "limitations", "weight"]
+                },
+                "REQUIRES_POWER_SUPPLY": {
+                    "description": "Component requires specific power supply",
+                    "properties": ["voltage", "current", "weight"]
+                },
+                "USES_BATTERY": {
+                    "description": "Device uses specific battery for backup",
+                    "properties": ["backup_hours", "quantity", "weight"]
+                },
+                "POWERED_BY": {
+                    "description": "Device is powered by another component",
+                    "properties": ["voltage", "current_draw", "weight"]
+                },
+                "REQUIRES_MODULE": {
+                    "description": "System requires specific module for operation",
+                    "properties": ["function", "mandatory", "weight"]
+                },
+                "HAS_SPECIFICATION": {
+                    "description": "Product has specific technical specifications",
+                    "properties": ["category", "compliance", "weight"]
                 }
             }
         }

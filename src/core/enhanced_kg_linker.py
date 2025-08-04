@@ -283,7 +283,7 @@ class EnhancedKGLinker:
             )
             
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": extraction_prompt}
@@ -430,7 +430,7 @@ class EnhancedKGLinker:
                     MATCH (d:Device)-[r:REQUIRES_BASE|COMPATIBLE_WITH_BASE]->(b:Base)
                     WHERE d.category IN ['Smoke Detector', 'Heat Detector']
                     RETURN d.sku, d.name, type(r) as relationship, b.sku, b.name
-                    ORDER BY d.category, d.sku
+                    ORDER BY d.sku
                 ''',
                 'parameters': {}
             })
@@ -457,9 +457,9 @@ class EnhancedKGLinker:
                       (d)-[:REQUIRES_BASE]->(b:Base)
                 OPTIONAL MATCH (p)-[:HAS_INTERNAL_MODULE]->(im:InternalModule)
                 WHERE im.required = true OR im IS NULL
-                RETURN p.sku as panel, d.sku as device, b.sku as base, 
-                       collect(im.sku) as internal_modules
-                ORDER BY p.sku, d.category
+                WITH p, d, b, collect(im.sku) as internal_modules
+                RETURN p.sku as panel, d.sku as device, b.sku as base, internal_modules
+                ORDER BY p.sku, d.sku
             ''',
             'parameters': {}
         })

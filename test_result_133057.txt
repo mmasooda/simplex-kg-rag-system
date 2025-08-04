@@ -1,0 +1,17 @@
+Query: I need smoke detectors with relay bases
+Context: KNOWLEDGE GRAPH DATA:
+
+RELEVANT DOCUMENTS:
+- --- Page 1 --- 4100ES eServices Fire Management System Built on the Solid Performance of 4020 & 4100 Series Systems! --- Page 2 --- Course Objectives: Prepare a correct system bill-of-material to cus...
+- Power Supplies, 50Watt Amplifiers, etc) --- Page 15 --- Packaging Concepts – Bay Modules Legacy Style Module Two Piece design –Mother/Daughter card 2” X 11” mounting space Flat Mount One Piece de...
+- Points (3) Class A or B NACs 4100-9111 in a 2 Bay Cabinet --- Page 25 --- 2 x 40 Character Display Ergonomic layout for improved intuitive operation Similar to 4100 style - reduces operator traini...
+
+Answer: For your requirement of smoke detectors with relay bases, I recommend the **Simplex 4098-9754** photoelectric smoke detector. This model is designed to provide reliable smoke detection and can be used with relay bases to facilitate various alarm and control functions.
+
+To pair with the smoke detector, you can use the **Simplex 4098-9792** relay base. This relay base allows for the integration of the smoke detector into your fire alarm system, enabling it to trigger external devices or alarms when smoke is detected.
+
+### Summary of Recommendation:
+- **Smoke Detector**: Simplex 4098-9754 (Photoelectric Smoke Detector)
+- **Relay Base**: Simplex 4098-9792 (Relay Base for Smoke Detector)
+
+This combination will ensure effective smoke detection with the capability to control additional devices as needed. Make sure to verify compatibility with your existing fire alarm system.

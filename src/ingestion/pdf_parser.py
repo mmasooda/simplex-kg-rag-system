@@ -1,6 +1,6 @@
 """
 PDF Parser Module for Simplex Product Documentation
-Handles extraction of text and tables from PDF files
+Handles extraction of text and tables from PDF files with advanced table extraction
 """
 
 import json
@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 import pandas as pd
 from dataclasses import dataclass, asdict
+import camelot
+import tabula
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +33,12 @@ class ExtractedDocument:
 
 class PDFParser:
     """
-    Hybrid PDF parser using PyMuPDF for text and simplified table extraction
+    Advanced PDF parser using PyMuPDF for text and camelot/tabula for table extraction
     """
     
-    def __init__(self):
+    def __init__(self, use_advanced_tables: bool = True):
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.use_advanced_tables = use_advanced_tables
         
     def extract_from_pdf(self, pdf_path: Path) -> ExtractedDocument:
         """
@@ -66,14 +69,17 @@ class PDFParser:
             finally:
                 doc.close()
             
-            # Extract tables using pandas (simplified approach)
-            # For production, you would use camelot-py or similar
-            tables = self._extract_tables_simple(text_content)
+            # Extract tables using advanced methods
+            if self.use_advanced_tables:
+                tables = self._extract_tables_advanced(pdf_path)
+            else:
+                tables = self._extract_tables_simple(text_content)
             
             metadata = {
                 "page_count": page_count,
                 "file_size": pdf_path.stat().st_size,
-                "extraction_method": "PyMuPDF"
+                "extraction_method": "PyMuPDF + Advanced Tables" if self.use_advanced_tables else "PyMuPDF",
+                "tables_found": len(tables)
             }
             
             return ExtractedDocument(
@@ -86,6 +92,129 @@ class PDFParser:
         except Exception as e:
             self.logger.error(f"Error processing PDF {pdf_path}: {str(e)}")
             raise
+    
+    def _extract_tables_advanced(self, pdf_path: Path) -> List[pd.DataFrame]:
+        """
+        Advanced table extraction using camelot and tabula libraries
+        """
+        tables = []
+        
+        try:
+            # Method 1: Try camelot (lattice method for tables with clear borders)
+            self.logger.info(f"Attempting camelot lattice extraction from {pdf_path}")
+            camelot_tables = camelot.read_pdf(str(pdf_path), flavor='lattice', pages='all')
+            
+            for table in camelot_tables:
+                if table.df is not None and not table.df.empty:
+                    # Clean the table
+                    cleaned_df = self._clean_table(table.df)
+                    if cleaned_df is not None and not cleaned_df.empty:
+                        tables.append(cleaned_df)
+                        self.logger.info(f"Camelot found table with shape {cleaned_df.shape}")
+            
+        except Exception as e:
+            self.logger.warning(f"Camelot lattice extraction failed: {e}")
+        
+        try:
+            # Method 2: Try camelot stream method (for tables without borders)  
+            self.logger.info(f"Attempting camelot stream extraction from {pdf_path}")
+            camelot_stream = camelot.read_pdf(str(pdf_path), flavor='stream', pages='all')
+            
+            for table in camelot_stream:
+                if table.df is not None and not table.df.empty:
+                    cleaned_df = self._clean_table(table.df)
+                    if cleaned_df is not None and not cleaned_df.empty and not self._is_duplicate_table(cleaned_df, tables):
+                        tables.append(cleaned_df)
+                        self.logger.info(f"Camelot stream found table with shape {cleaned_df.shape}")
+                        
+        except Exception as e:
+            self.logger.warning(f"Camelot stream extraction failed: {e}")
+        
+        try:
+            # Method 3: Try tabula as fallback
+            self.logger.info(f"Attempting tabula extraction from {pdf_path}")
+            tabula_tables = tabula.read_pdf(str(pdf_path), pages='all', multiple_tables=True)
+            
+            for table in tabula_tables:
+                if table is not None and not table.empty:
+                    cleaned_df = self._clean_table(table)
+                    if cleaned_df is not None and not cleaned_df.empty and not self._is_duplicate_table(cleaned_df, tables):
+                        tables.append(cleaned_df)
+                        self.logger.info(f"Tabula found table with shape {cleaned_df.shape}")
+                        
+        except Exception as e:
+            self.logger.warning(f"Tabula extraction failed: {e}")
+        
+        # If advanced methods fail, fallback to simple extraction
+        if not tables:
+            self.logger.info("Advanced table extraction found no tables, falling back to simple method")
+            # Read text for fallback
+            try:
+                import fitz
+                doc = fitz.open(pdf_path)
+                text_content = ""
+                for page_num in range(len(doc)):
+                    text_content += doc[page_num].get_text()
+                doc.close()
+                tables = self._extract_tables_simple(text_content)
+            except Exception as e:
+                self.logger.error(f"Fallback simple extraction also failed: {e}")
+        
+        self.logger.info(f"Total tables extracted: {len(tables)}")
+        return tables
+    
+    def _clean_table(self, df: pd.DataFrame) -> Optional[pd.DataFrame]:
+        """Clean and validate extracted table"""
+        try:
+            # Remove empty rows and columns
+            df = df.dropna(how='all').dropna(axis=1, how='all')
+            
+            # Skip tables that are too small
+            if df.shape[0] < 2 or df.shape[1] < 2:
+                return None
+            
+            # Remove header/footer rows that might be page numbers or repeated headers
+            if df.shape[0] > 3:
+                # Check if first/last rows contain only page numbers or common headers
+                first_row_str = ' '.join(str(df.iloc[0]).lower())
+                last_row_str = ' '.join(str(df.iloc[-1]).lower())
+                
+                if any(word in first_row_str for word in ['page', 'simplex', 'product', 'catalog']):
+                    df = df.iloc[1:]
+                if any(word in last_row_str for word in ['page', 'www.', 'simplex']):
+                    df = df.iloc[:-1]
+            
+            # Reset index
+            df = df.reset_index(drop=True)
+            
+            # Set first row as header if it looks like a header
+            if df.shape[0] > 1:
+                first_row = df.iloc[0].astype(str).str.lower()
+                if any(header_word in ' '.join(first_row) for header_word in ['sku', 'model', 'product', 'part', 'description', 'type']):
+                    df.columns = df.iloc[0]
+                    df = df.iloc[1:].reset_index(drop=True)
+            
+            return df if not df.empty else None
+            
+        except Exception as e:
+            self.logger.warning(f"Error cleaning table: {e}")
+            return None
+    
+    def _is_duplicate_table(self, new_table: pd.DataFrame, existing_tables: List[pd.DataFrame]) -> bool:
+        """Check if table is a duplicate of existing tables"""
+        try:
+            for existing in existing_tables:
+                # Compare shapes
+                if new_table.shape == existing.shape:
+                    # Compare content similarity (first few cells)
+                    if new_table.shape[0] > 0 and new_table.shape[1] > 0:
+                        new_sample = str(new_table.iloc[0, 0])[:50]
+                        existing_sample = str(existing.iloc[0, 0])[:50]
+                        if new_sample == existing_sample:
+                            return True
+            return False
+        except:
+            return False
     
     def _extract_tables_simple(self, text: str) -> List[pd.DataFrame]:
         """

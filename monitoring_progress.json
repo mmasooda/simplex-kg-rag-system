@@ -1,0 +1,122 @@
+[
+  {
+    "timestamp": "2025-08-04T13:24:19.088345",
+    "nodes": {
+      "InternalModule": 20,
+      "Device": 9,
+      "Panel": 4,
+      "Base": 4,
+      "Module": 4
+    },
+    "relationships": {
+      "COMPATIBLE_WITH": 21,
+      "HAS_INTERNAL_MODULE": 20,
+      "REQUIRES_BASE": 4,
+      "COMPATIBLE_WITH_BASE": 3,
+      "REQUIRES": 1
+    },
+    "total_nodes": 41,
+    "total_relationships": 49,
+    "enriched_entities": 1
+  },
+  {
+    "timestamp": "2025-08-04T13:26:19.104432",
+    "nodes": {
+      "InternalModule": 20,
+      "Device": 9,
+      "Panel": 4,
+      "Base": 4,
+      "Module": 4
+    },
+    "relationships": {
+      "COMPATIBLE_WITH": 21,
+      "HAS_INTERNAL_MODULE": 20,
+      "REQUIRES_BASE": 4,
+      "COMPATIBLE_WITH_BASE": 3,
+      "REQUIRES": 1
+    },
+    "total_nodes": 41,
+    "total_relationships": 49,
+    "enriched_entities": 1
+  },
+  {
+    "timestamp": "2025-08-04T13:28:19.132728",
+    "nodes": {
+      "InternalModule": 20,
+      "Device": 9,
+      "Panel": 4,
+      "Base": 4,
+      "Module": 4
+    },
+    "relationships": {
+      "COMPATIBLE_WITH": 21,
+      "HAS_INTERNAL_MODULE": 20,
+      "REQUIRES_BASE": 4,
+      "COMPATIBLE_WITH_BASE": 3,
+      "REQUIRES": 1
+    },
+    "total_nodes": 41,
+    "total_relationships": 49,
+    "enriched_entities": 1
+  },
+  {
+    "timestamp": "2025-08-04T13:30:19.153225",
+    "nodes": {
+      "InternalModule": 20,
+      "Device": 9,
+      "Panel": 4,
+      "Base": 4,
+      "Module": 4
+    },
+    "relationships": {
+      "COMPATIBLE_WITH": 21,
+      "HAS_INTERNAL_MODULE": 20,
+      "REQUIRES_BASE": 4,
+      "COMPATIBLE_WITH_BASE": 3,
+      "REQUIRES": 1
+    },
+    "total_nodes": 41,
+    "total_relationships": 49,
+    "enriched_entities": 1
+  },
+  {
+    "timestamp": "2025-08-04T13:32:19.169142",
+    "nodes": {
+      "InternalModule": 20,
+      "Device": 9,
+      "Panel": 4,
+      "Base": 4,
+      "Module": 4
+    },
+    "relationships": {
+      "COMPATIBLE_WITH": 21,
+      "HAS_INTERNAL_MODULE": 20,
+      "REQUIRES_BASE": 4,
+      "COMPATIBLE_WITH_BASE": 3,
+      "REQUIRES": 1
+    },
+    "total_nodes": 41,
+    "total_relationships": 49,
+    "enriched_entities": 1
+  },
+  {
+    "timestamp": "2025-08-04T13:34:19.195244",
+    "nodes": {
+      "InternalModule": 20,
+      "Device": 9,
+      "Module": 5,
+      "Panel": 4,
+      "Base": 4
+    },
+    "relationships": {
+      "COMPATIBLE_WITH": 21,
+      "HAS_INTERNAL_MODULE": 20,
+      "REQUIRES_BASE": 4,
+      "COMPATIBLE_WITH_BASE": 3,
+      "REQUIRES": 2
+    },
+    "total_nodes": 42,
+    "total_relationships": 50,
+    "enriched_entities": 1
+  }
+]
